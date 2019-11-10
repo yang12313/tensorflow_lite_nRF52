@@ -2,7 +2,6 @@
 #include "model.h"
 #include <I2C.h>
 #include <Wire.h>
-#include <ArduinoSTL.h>
 #include <system_configuration.h>
 #include <unwind-cxx.h>
 #include <iostream>
