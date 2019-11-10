@@ -3,6 +3,7 @@ For debug
 
 Please manually download the libraries associated to the file to complete the compilation. 
 
+### Error log is shown below:
 ````
 Arduino: 1.8.9 (Windows 10), Board: "Adafruit Bluefruit Feather nRF52832, 0.2.12 SoftDevice s132 6.1.1, Level 0 (Release)"
 
