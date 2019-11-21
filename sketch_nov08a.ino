@@ -2,10 +2,8 @@
 #include "model.h"
 #include <I2C.h>
 #include <Wire.h>
-#include <system_configuration.h>
-#include <unwind-cxx.h>
+
 #include <iostream>
-#include <SparkFunLSM6DS3.h>
 #include <bluefruit.h>
 
 #include <TensorFlowLite.h>
@@ -18,10 +16,10 @@
 
 const int numSamples = 90;
 int samplesRead = numSamples;
-
 tflite::MicroErrorReporter tflErrorReporter;
 tflite::ops::micro::AllOpsResolver tflOpsResolver;
 
+tflite::ErrorReporter* error_reporter = nullptr;
 const tflite::Model* tflModel = nullptr;
 tflite::MicroInterpreter* tflInterpreter = nullptr;
 TfLiteTensor* tflInputTensor = nullptr;
@@ -157,7 +155,8 @@ void setup() {
   //  3 (Continuous during trigger)
   //  4 (Bypass until trigger)
   //  6 (Continous mode)
-
+  static tflite::MicroErrorReporter micro_error_reporter;  // NOLINT
+  error_reporter = &micro_error_reporter;
 
 
 
@@ -207,10 +206,13 @@ void setup() {
   timer = micros();
 
   tflModel = tflite::GetModel(model);
-  if (tflModel->version() != TFLITE_SCHEMA_VERSION) {
-  Serial.println("Model schema mismatch!");
-  while (1);
-}
+//  if (tflModel->version() != TFLITE_SCHEMA_VERSION) {
+//    error_reporter->Report(
+//        "Model provided is schema version %d not equal "
+//        "to supported version %d.",
+////        tflModel->version(), TFLITE_SCHEMA_VERSION);
+//    return;
+//  }
   tflInterpreter = new tflite::MicroInterpreter(tflModel, tflOpsResolver, tensorArena, tensorArenaSize, &tflErrorReporter);
   tflInterpreter->AllocateTensors();
   tflInputTensor = tflInterpreter->input(0);
@@ -235,27 +237,27 @@ void loop() {
   }
 
   while(samplesRead < numSamples){
-    // check if new acceleration AND gyroscope data is available
-    aX =  myIMU.readFloatAccelX();
-    aY =  myIMU.readFloatAccelY();
-    aZ =  myIMU.readFloatAccelZ();
-    gX =  myIMU.readFloatGyroX();
-    gY =  myIMU.readFloatGyroY();
-    gZ =  myIMU.readFloatGyroZ();
-    tflInputTensor->data.f[samplesRead * 6 + 0] = aX;
-    tflInputTensor->data.f[samplesRead * 6 + 1] = aY;
-    tflInputTensor->data.f[samplesRead * 6 + 2] = aZ;
-    tflInputTensor->data.f[samplesRead * 6 + 3] = gX;
-    tflInputTensor->data.f[samplesRead * 6 + 4] = gY;
-    tflInputTensor->data.f[samplesRead * 6 + 5] = gZ;
-    samplesRead++;
-    if (samplesRead == numSamples) {
-      // Run inferencing
-      TfLiteStatus invokeStatus = tflInterpreter->Invoke();
-      if (invokeStatus != kTfLiteOk) {
-        Serial.println("Invoke failed!");
-
-      }
+//    // check if new acceleration AND gyroscope data is available
+//    aX =  myIMU.readFloatAccelX();
+//    aY =  myIMU.readFloatAccelY();
+//    aZ =  myIMU.readFloatAccelZ();
+//    gX =  myIMU.readFloatGyroX();
+//    gY =  myIMU.readFloatGyroY();
+//    gZ =  myIMU.readFloatGyroZ();
+//    tflInputTensor->data.f[samplesRead * 6 + 0] = aX;
+//    tflInputTensor->data.f[samplesRead * 6 + 1] = aY;
+//    tflInputTensor->data.f[samplesRead * 6 + 2] = aZ;
+//    tflInputTensor->data.f[samplesRead * 6 + 3] = gX;
+//    tflInputTensor->data.f[samplesRead * 6 + 4] = gY;
+//    tflInputTensor->data.f[samplesRead * 6 + 5] = gZ;
+//    samplesRead++;
+//    if (samplesRead == numSamples) {
+//      // Run inferencing
+//      TfLiteStatus invokeStatus = tflInterpreter->Invoke();
+//      if (invokeStatus != kTfLiteOk) {
+//        Serial.println("Invoke failed!");
+//
+//      }
 //      for (int i = 0; i < NUM_GESTURES; i++) {
 //        Serial.print(GESTURES[i]);
 //        Serial.print(": ");
@@ -263,5 +265,4 @@ void loop() {
 //      }
 //      Serial.println();
   }
-}
 }
